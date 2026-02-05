@@ -1,0 +1,75 @@
+name: 🚀 Develop → Main PR
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-release-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: 🔍 Check if PR exists
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_EXISTS=$(gh pr list --head develop --base main --json number --jq length)
+          echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+
+      - name: 📊 Get latest commits
+        id: commits
+        run: |
+          COMMITS=$(git log main..develop --oneline | head -10)
+          COMMITS="${COMMITS//$'\n'/'%0A'}"
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create PR to main
+        if: steps.check-pr.outputs.pr_exists == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head develop \
+            --title "🚀 Release: Merge develop into main" \
+            --body "## 🎉 Release PR
+            
+Automática PR gerada após merge em \`develop\`
+
+### 📝 Últimas alterações
+\`\`\`
+${{ steps.commits.outputs.commits }}
+\`\`\`
+
+### 🔄 Processo
+1. ✅ Merge em develop realizado
+2. ⏳ Aguardando revisão final para main
+3. 🎯 Após aprovação, será feito o merge para produção
+
+### ⚠️ Importante
+- Revisar todas as mudanças
+- Validar testes
+- Verificar cobertura de testes
+- Executar testes de integração
+
+### ✅ Checklist
+- [ ] Code review completo
+- [ ] Testes em staging validados
+- [ ] Documentação atualizada
+- [ ] Sem breaking changes" \
+            --label "type:release" \
+            --draft=false
