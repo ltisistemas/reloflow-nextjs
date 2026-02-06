@@ -74,7 +74,7 @@ export default function Kanban() {
   useEffect(() => fetchData(), []);
 
   // Get kanban data from API
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     if (loading) return;
     setLoading(true);
     setCompany(null);
@@ -82,7 +82,6 @@ export default function Kanban() {
 
     consultarEmpresa()
       .then((response) => {
-        console.log("Empresa:", response);
         const company = response.data ? response.data[0] : null;
         setCompany(company);
 
@@ -98,36 +97,35 @@ export default function Kanban() {
         console.error("Erro ao consultar empresa:", error);
         alert("Erro ao consultar empresa.", "error");
       });
-  };
+  }, []);
 
-  const handleLeadCreate = (position: Position) => {
-    if (loading) return;
-    setLoading(true);
+  const handleLeadCreate = useCallback(
+    (position: Position) => {
+      if (loading || !nameLead.trim()) return;
+      setLoading(true);
 
-    const payload = {
-      companyPositionId: position.id,
-      companyId: position.companyId,
-      name: nameLead,
-      description: "",
-    } as CreateLeadRequest;
+      const payload = {
+        companyPositionId: position.id,
+        companyId: position.companyId,
+        name: nameLead.trim(),
+        description: "",
+      } as CreateLeadRequest;
 
-    criarLead(payload)
-      .then((response) => {
-        alert("Lead criado com sucesso.");
-        setLoading(false);
-        setLead(response.data);
-
-        const leads = [...position.leads];
-        leads.push(lead!);
-
-        position.leads = leads;
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error("> Erro ao criar o Lead:", error);
-        alert("Erro ao criar o Lead.", "error");
-      });
-  };
+      criarLead(payload)
+        .then((response) => {
+          alert("Lead criado com sucesso.");
+          setNameLead("");
+          setLoading(false);
+          fetchData();
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.error("> Erro ao criar o Lead:", error);
+          alert("Erro ao criar o Lead.", "error");
+        });
+    },
+    [nameLead, loading, fetchData],
+  );
 
   const classOfElements = {
     main: "no-scrollbar flex-1 flex items-center gap-2 size-full min-h-0 p-2 bg-background overflow-hidden overflow-x-auto",
@@ -238,7 +236,7 @@ export default function Kanban() {
     <main className={classOfElements.main}>
       {!loading && positions.length > 0 && (
         <>
-          {positions
+          {[...positions]
             .sort((a, b) => {
               const indexA = orderByColumns.indexOf(a.name);
               const indexB = orderByColumns.indexOf(b.name);
@@ -252,7 +250,7 @@ export default function Kanban() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent
-                  className="flex-1 min-h-[100px] dropzone border-2 border-dashed border-transparent bg-transparent transition-all duration-200 [&.dropzone-active]:bg-teal-800/80 [&.dropzone-active]:border-teal-900"
+                  className="flex-1 min-h-25 dropzone border-2 border-dashed border-transparent bg-transparent transition-all duration-200 [&.dropzone-active]:bg-teal-800/80 [&.dropzone-active]:border-teal-900"
                   onDragOver={ondragover}
                   onDrop={(e) => ondrop(e, position)}
                   onDragLeave={ondragleave}
@@ -274,9 +272,12 @@ export default function Kanban() {
                 </CardContent>
                 <CardFooter className="mt-auto flex items-center justify-center">
                   {position.name === "Captação de lead" && (
-                    <Popover>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" className="cursor-pointer">
+                        <Button
+                          variant="default"
+                          className="cursor-pointer bg-transparent text-white hover:bg-teal-400 hover:text-teal-900 font-extrabold"
+                        >
                           <PlusCircle className="mr-2" />
                           Adicionar tarefa
                         </Button>
