@@ -32,21 +32,24 @@ jobs:
         if: steps.check-pr.outputs.pr_exists == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ steps.check-pr.outputs.branch_name }}
+          PR_BODY: |
+            ## 📋 Descrição
+
+            Automática PR gerada pela branch `${{ steps.check-pr.outputs.branch_name }}`
+
+            ### 🔗 Principais mudanças
+            - Aguardando revisão da equipe
+
+            ### ✅ Checklist
+            - [ ] Código revisado
+            - [ ] Testes passando
+            - [ ] Sem conflitos
         run: |
           gh pr create \
             --base develop \
-            --head ${{ steps.check-pr.outputs.branch_name }} \
-            --title "✨ Merge ${{ steps.check-pr.outputs.branch_name }} into develop" \
-            --body "## 📋 Descrição
-            
-Automática PR gerada pela branch \`${{ steps.check-pr.outputs.branch_name }}\`
-
-### 🔗 Principais mudanças
-- Aguardando revisão da equipe
-
-### ✅ Checklist
-- [ ] Código revisado
-- [ ] Testes passando
-- [ ] Sem conflitos" \
+            --head $BRANCH_NAME \
+            --title "✨ Merge $BRANCH_NAME into develop" \
+            --body "$PR_BODY" \
             --label "type:feature" \
             --draft=false
