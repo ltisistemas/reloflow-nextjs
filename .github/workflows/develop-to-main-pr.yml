@@ -1,75 +1,163 @@
-name: 🚀 Develop → Main PR
+name: Develop to Main
 
 on:
   pull_request:
-    types:
-      - closed
+    types: [closed]
     branches:
       - develop
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
-  create-release-pr:
+  test-and-build:
+    name: Test, Build and Create PR
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      checks: write
     steps:
-      - name: 📥 Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: develop
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: develop
 
-      - name: 🔍 Check if PR exists
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: yarn test --code-coverage --watch=false --browsers=ChromeHeadless
+
+      - name: Generate version
+        id: version
+        run: |
+          VERSION=$(BUILD_TYPE=main node scripts/version.js)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build application
+        run: yarn build
+        env:
+          BUILD_TYPE: main
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.version.outputs.version }}
+          path: dist/
+          retention-days: 30
+
+      - name: Check if PR to main already exists
         id: check-pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_EXISTS=$(gh pr list --head develop --base main --json number --jq length)
-          echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:develop`,
+              base: 'main',
+              state: 'open'
+            });
 
-      - name: 📊 Get latest commits
-        id: commits
-        run: |
-          COMMITS=$(git log main..develop --oneline | head -10)
-          COMMITS="${COMMITS//$'\n'/'%0A'}"
-          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+            if (pulls.length > 0) {
+              core.setOutput('pr_number', pulls[0].number);
+              core.setOutput('pr_exists', 'true');
+              return pulls[0].number;
+            }
+            core.setOutput('pr_exists', 'false');
+            return null;
 
-      - name: 🚀 Create PR to main
-        if: steps.check-pr.outputs.pr_exists == '0'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --base main \
-            --head develop \
-            --title "🚀 Release: Merge develop into main" \
-            --body "## 🎉 Release PR
-            
-Automática PR gerada após merge em \`develop\`
+      - name: Update existing PR to main
+        if: steps.check-pr.outputs.pr_exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.check-pr.outputs.pr_number }};
+            const mergedPrNumber = context.payload.pull_request.number;
+            const mergedPrTitle = context.payload.pull_request.title;
 
-### 📝 Últimas alterações
-\`\`\`
-${{ steps.commits.outputs.commits }}
-\`\`\`
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              title: `[Release] develop → main (v${{ steps.version.outputs.version }})`,
+              body: `## Descrição\n\nPR automático para merge de develop em main.\n\n**Base:** main\n**Head:** develop\n**Versão:** ${{ steps.version.outputs.version }}\n\n**Último PR merged em develop:** #${mergedPrNumber} - ${mergedPrTitle}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n---\n\n*Este PR foi criado/atualizado automaticamente pelo GitHub Actions quando um PR foi merged em develop.*`
+            });
 
-### 🔄 Processo
-1. ✅ Merge em develop realizado
-2. ⏳ Aguardando revisão final para main
-3. 🎯 Após aprovação, será feito o merge para produção
+            console.log(`PR #${prNumber} para main atualizado com sucesso`);
 
-### ⚠️ Importante
-- Revisar todas as mudanças
-- Validar testes
-- Verificar cobertura de testes
-- Executar testes de integração
+      - name: Create new PR to main
+        if: steps.check-pr.outputs.pr_exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mergedPrNumber = context.payload.pull_request.number;
+            const mergedPrTitle = context.payload.pull_request.title;
 
-### ✅ Checklist
-- [ ] Code review completo
-- [ ] Testes em staging validados
-- [ ] Documentação atualizada
-- [ ] Sem breaking changes" \
-            --label "type:release" \
-            --draft=false
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Release] develop → main (v${{ steps.version.outputs.version }})`,
+              head: 'develop',
+              base: 'main',
+              body: `## Descrição\n\nPR automático para merge de develop em main.\n\n**Base:** main\n**Head:** develop\n**Versão:** ${{ steps.version.outputs.version }}\n\n**Último PR merged em develop:** #${mergedPrNumber} - ${mergedPrTitle}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n---\n\n*Este PR foi criado automaticamente pelo GitHub Actions quando um PR foi merged em develop.*`,
+              draft: false
+            });
+
+            console.log(`PR #${pr.number} para main criado com sucesso: ${pr.html_url}`);
+
+      - name: Create or Update Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.version }}';
+            const mergedPrNumber = context.payload.pull_request.number;
+            const tagName = `v${version}`;
+
+            try {
+              // Verificar se a release já existe
+              const { data: existingRelease } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tagName
+              });
+              
+              // Se existe, atualizar
+              const { data: release } = await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: existingRelease.id,
+                name: `Release ${version} - Production`,
+                body: `## Release ${version}\n\n**Base:** main\n**Tipo:** Production Release\n**Source PR:** #${mergedPrNumber}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n### Artifacts\n\nBuild artifacts estão disponíveis na action: \`dist-${version}\`\n\n---\n\n*Release atualizada automaticamente pelo GitHub Actions.*`,
+                draft: false,
+                prerelease: false
+              });
+              
+              console.log(`Release ${version} atualizada: ${release.html_url}`);
+            } catch (error) {
+              // Se não existe (404), criar nova
+              if (error.status === 404) {
+                const { data: release } = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tagName,
+                  name: `Release ${version} - Production`,
+                  body: `## Release ${version}\n\n**Base:** main\n**Tipo:** Production Release\n**Source PR:** #${mergedPrNumber}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n### Artifacts\n\nBuild artifacts estão disponíveis na action: \`dist-${version}\`\n\n---\n\n*Release criada automaticamente pelo GitHub Actions.*`,
+                  draft: false,
+                  prerelease: false
+                });
+                
+                console.log(`Release ${version} criada: ${release.html_url}`);
+              } else {
+                throw error;
+              }
+            }
