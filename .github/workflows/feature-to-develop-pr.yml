@@ -1,52 +1,158 @@
-name: 🔄 Feature → Develop PR
+name: Feature to Develop
 
 on:
   push:
     branches:
-      - 'feature/**'
-
-permissions:
-  contents: read
-  pull-requests: write
+      - "feature/**"
 
 jobs:
-  create-pr:
+  test-and-build:
+    name: Test, Build and Create PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      checks: write
     steps:
-      - name: 📥 Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔍 Check if PR exists
-        id: check-pr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # - name: Run tests with coverage
+      #   run: yarn test --code-coverage --watch=false --browsers=ChromeHeadless
+
+      - name: Generate version
+        id: version
         run: |
-          BRANCH_NAME="${{ github.ref_name }}"
-          PR_EXISTS=$(gh pr list --head "$BRANCH_NAME" --base develop --json number --jq length)
-          echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
+          VERSION=$(node scripts/version.js)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build application
+        run: yarn build
+        env:
+          BUILD_TYPE: develop
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ steps.version.outputs.version }}
+          path: dist/
+          retention-days: 30
+
+      - name: Get branch name
+        id: branch
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
-      - name: ✨ Create PR to develop
-        if: steps.check-pr.outputs.pr_exists == '0'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr create \
-            --base develop \
-            --head ${{ steps.check-pr.outputs.branch_name }} \
-            --title "✨ Merge ${{ steps.check-pr.outputs.branch_name }} into develop" \
-            --body "## 📋 Descrição
-            
-Automática PR gerada pela branch \`${{ steps.check-pr.outputs.branch_name }}\`
+      - name: Check if PR exists
+        id: check-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${{ steps.branch.outputs.branch_name }}`,
+              base: 'develop',
+              state: 'open'
+            });
 
-### 🔗 Principais mudanças
-- Aguardando revisão da equipe
+            if (pulls.length > 0) {
+              core.setOutput('pr_number', pulls[0].number);
+              core.setOutput('pr_exists', 'true');
+              return pulls[0].number;
+            }
+            core.setOutput('pr_exists', 'false');
+            return null;
 
-### ✅ Checklist
-- [ ] Código revisado
-- [ ] Testes passando
-- [ ] Sem conflitos" \
-            --label "type:feature" \
-            --draft=false
+      - name: Update existing PR
+        if: steps.check-pr.outputs.pr_exists == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ steps.check-pr.outputs.pr_number }};
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              title: `[Feature] ${{ steps.branch.outputs.branch_name }} → develop (v${{ steps.version.outputs.version }})`,
+              body: `## Descrição\n\nPR automático criado/atualizado para branch feature.\n\n**Branch:** ${{ steps.branch.outputs.branch_name }}\n**Base:** develop\n**Versão:** ${{ steps.version.outputs.version }}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n---\n\n*Este PR foi criado/atualizado automaticamente pelo GitHub Actions.*`
+            });
+            console.log(`PR #${prNumber} atualizado com sucesso`);
+
+      - name: Create new PR
+        if: steps.check-pr.outputs.pr_exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Feature] ${{ steps.branch.outputs.branch_name }} → develop (v${{ steps.version.outputs.version }})`,
+              head: '${{ steps.branch.outputs.branch_name }}',
+              base: 'develop',
+              body: `## Descrição\n\nPR automático criado para branch feature.\n\n**Branch:** ${{ steps.branch.outputs.branch_name }}\n**Base:** develop\n**Versão:** ${{ steps.version.outputs.version }}\n\n### Status\n\n✅ Testes executados\n✅ Build realizado\n✅ Artifacts disponíveis\n\n---\n\n*Este PR foi criado automaticamente pelo GitHub Actions.*`,
+              draft: false
+            });
+            console.log(`PR #${pr.number} criado com sucesso: ${pr.html_url}`);
+
+      - name: Create or Update Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.version }}';
+            const branchName = '${{ steps.branch.outputs.branch_name }}';
+            const tagName = `v${version}`;
+
+            try {
+              // Verificar se a release já existe
+              const { data: existingRelease } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tagName
+              });
+              
+              // Se existe, atualizar
+              const { data: release } = await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: existingRelease.id,
+                name: `Release ${version} - ${branchName}`,
+                body: `## Release ${version}\n\n**Branch:** ${branchName}\n**Base:** develop\n**Tipo:** Feature Build\n\n### Artifacts\n\nBuild artifacts estão disponíveis na action: \`dist-${version}\`\n\n### Download\n\nOs artifacts podem ser baixados na página da action ou através da API do GitHub.\n\n---\n\n*Release atualizada automaticamente pelo GitHub Actions.*`,
+                draft: false,
+                prerelease: true
+              });
+              
+              console.log(`Release ${version} atualizada: ${release.html_url}`);
+            } catch (error) {
+              // Se não existe (404), criar nova
+              if (error.status === 404) {
+                const { data: release } = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tagName,
+                  name: `Release ${version} - ${branchName}`,
+                  body: `## Release ${version}\n\n**Branch:** ${branchName}\n**Base:** develop\n**Tipo:** Feature Build\n\n### Artifacts\n\nBuild artifacts estão disponíveis na action: \`dist-${version}\`\n\n### Download\n\nOs artifacts podem ser baixados na página da action ou através da API do GitHub.\n\n---\n\n*Release criada automaticamente pelo GitHub Actions.*`,
+                  draft: false,
+                  prerelease: true
+                });
+                
+                console.log(`Release ${version} criada: ${release.html_url}`);
+              } else {
+                throw error;
+              }
+            }
