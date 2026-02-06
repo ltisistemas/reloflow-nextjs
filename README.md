@@ -1,5 +1,7 @@
 # 🚀 Reloflow
 
+**[🇵🇧 Portuguese](./README.pt-BR.md) | 🇺🇸 English**
+
 ![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?style=for-the-badge&logo=next.js)
 ![React](https://img.shields.io/badge/React-19.2.3-61DAFB?style=for-the-badge&logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript)
@@ -7,13 +9,13 @@
 ![.NET](https://img.shields.io/badge/.NET%208-512BD4?style=for-the-badge&logo=.net)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
 
-## 📋 Sobre o Projeto
+## 📋 About the Project
 
-Reloflow é uma aplicação web moderna para gerenciamento de kanban com autenticação segura. O sistema é composto por um frontend inovador em Next.js e um backend robusto em C# .NET 8.
+Reloflow is a modern web application for kanban board management with secure authentication. The system consists of an innovative frontend built with Next.js and a robust backend built with C# .NET 8.
 
 ---
 
-## � Preview
+## 📸 Preview
 
 <div align="center">
   <img src="screenshot/screen.png" alt="Reloflow Screenshot" width="100%" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
@@ -21,161 +23,161 @@ Reloflow é uma aplicação web moderna para gerenciamento de kanban com autenti
 
 ---
 
-## �🛠️ Stack Tecnológico
+## 🛠️ Tech Stack
 
-### Frontend (Este Repositório)
+### Frontend (This Repository)
 
-- **Next.js 16.1.6** - Framework React com SSR/SSG
-- **React 19.2.3** - Biblioteca UI moderna
-- **TypeScript 5** - Tipagem estática
-- **Tailwind CSS 4** - Estilização utilitária
-- **Radix UI** - Componentes acessíveis
-- **dnd-kit** - Drag & Drop avançado
-- **Sonner** - Sistema de notificações elegante
+- **Next.js 16.1.6** - React framework with SSR/SSG
+- **React 19.2.3** - Modern UI library
+- **TypeScript 5** - Static typing
+- **Tailwind CSS 4** - Utility-first CSS framework
+- **Radix UI** - Accessible components
+- **dnd-kit** - Advanced drag & drop
+- **Sonner** - Elegant notification system
 
 ### Backend
 
-- **C# .NET 8** - Framework principal
-- **Entity Framework Core** - ORM para dados
-- **Web API REST** - Arquitetura de serviços
-- **PostgreSQL** - Banco de dados relacional
+- **C# .NET 8** - Main framework
+- **Entity Framework Core** - ORM for data access
+- **Web API REST** - Service architecture
+- **PostgreSQL** - Relational database
 
 ---
 
 ## 🚀 Quick Start
 
-### Pré-requisitos
+### Prerequisites
 
-- **Node.js** 18+ e npm (ou yarn/pnpm)
-- **.NET 8 SDK** (para o backend)
-- **PostgreSQL** 12+ (para o banco de dados)
+- **Node.js** 18+ and npm (or yarn/pnpm)
+- **.NET 8 SDK** (for backend)
+- **PostgreSQL** 12+ (for database)
 
-### 1️⃣ Instalação Frontend
+### 1️⃣ Frontend Installation
 
 ```bash
-# Clone o repositório
-git clone <seu-repositorio>
+# Clone the repository
+git clone <your-repository>
 cd reloflow-nextjs
 
-# Instale as dependências
+# Install dependencies
 npm install
 ```
 
-### 2️⃣ Configuração do Backend
+### 2️⃣ Backend Setup
 
 ```bash
-# Clone o repositório do backend
-git clone <seu-repositorio-backend>
-cd seu-backend
+# Clone the backend repository
+git clone <your-backend-repository>
+cd your-backend
 
-# Restaure as dependências
+# Restore dependencies
 dotnet restore
 
-# Configure o banco de dados
+# Configure the database
 dotnet ef database update
 
-# Execute o servidor
+# Run the server
 dotnet run
 ```
 
-### 3️⃣ Variáveis de Ambiente
+### 3️⃣ Environment Variables
 
-Crie um arquivo `.env.local` na raiz do projeto frontend:
+Create a `.env.local` file in the root of the frontend project:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-### 4️⃣ Rodando o Projeto
+### 4️⃣ Running the Project
 
 ```bash
 # Terminal 1 - Frontend (Next.js)
 npm run dev
 ```
 
-O frontend estará disponível em **http://localhost:3000**
+The frontend will be available at **http://localhost:3000**
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📁 Project Structure
 
 ```
 src/
-├── app/                          # App Router do Next.js
-│   ├── (private)/                # Rotas protegidas
-│   │   ├── home/                 # Dashboard principal
-│   │   └── kanban/               # Gerenciador de kanban
-│   └── (public)/                 # Rotas públicas
-│       └── sign-in/              # Página de autenticação
-├── components/                   # Componentes React
-│   ├── ui/                       # Componentes UI reutilizáveis
+├── app/                          # Next.js App Router
+│   ├── (private)/                # Protected routes
+│   │   ├── home/                 # Main dashboard
+│   │   └── kanban/               # Kanban manager
+│   └── (public)/                 # Public routes
+│       └── sign-in/              # Authentication page
+├── components/                   # React components
+│   ├── ui/                       # Reusable UI components
 │   ├── hooks/                    # Custom hooks
 │   └── sidebar/                  # Sidebar layout
-├── lib/                          # Utilitários e serviços
-│   ├── http-client.ts            # Cliente HTTP customizado
-│   ├── utils.ts                  # Funções auxiliares
-│   ├── domain/                   # Modelos de domínio
-│   ├── infrastructure/           # Camada de infraestrutura
-│   └── application/              # Lógica de aplicação
-└── public/                       # Ativos estáticos
+├── lib/                          # Utilities and services
+│   ├── http-client.ts            # Custom HTTP client
+│   ├── utils.ts                  # Helper functions
+│   ├── domain/                   # Domain models
+│   ├── infrastructure/           # Infrastructure layer
+│   └── application/              # Application logic
+└── public/                       # Static assets
 ```
 
 ---
 
-## 🔧 Scripts Disponíveis
+## 🔧 Available Scripts
 
-| Script          | Descrição                            |
-| --------------- | ------------------------------------ |
-| `npm run dev`   | Inicia o servidor de desenvolvimento |
-| `npm run build` | Build para produção                  |
-| `npm run start` | Executa o build de produção          |
-| `npm run lint`  | Executa linter ESLint                |
-| `npm test`      | Executa testes                       |
+| Script          | Description              |
+| --------------- | ------------------------ |
+| `npm run dev`   | Start development server |
+| `npm run build` | Build for production     |
+| `npm run start` | Run production build     |
+| `npm run lint`  | Run ESLint linter        |
+| `npm test`      | Run tests                |
 
 ---
 
-## 🔗 Integração com Backend
+## 🔗 Backend Integration
 
-O frontend comunica com o backend via HTTP REST. Certifique-se de que:
+The frontend communicates with the backend via REST HTTP. Make sure that:
 
-1. ✅ O servidor .NET está rodando na porta configurada
-2. ✅ A variável `NEXT_PUBLIC_API_URL` aponta para o servidor correto
-3. ✅ O banco PostgreSQL está acessível pelo backend
+1. ✅ The .NET server is running on the configured port
+2. ✅ The `NEXT_PUBLIC_API_URL` variable points to the correct server
+3. ✅ The PostgreSQL database is accessible by the backend
 
-### Exemplo de Chamada API
+### API Call Example
 
 ```typescript
-// lib/http-client.ts - Cliente HTTP pré-configurado
+// lib/http-client.ts - Pre-configured HTTP client
 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/endpoint`);
 ```
 
 ---
 
-## 🔐 Autenticação
+## 🔐 Authentication
 
-O sistema utiliza um modelo de autenticação seguro com credenciais. Verifique as policies de segurança no backend .NET.
+The system uses a secure credential-based authentication model. Check the security policies in the .NET backend.
 
 ---
 
-## 📝 Testes
+## 📝 Testing
 
 ```bash
-# Executar testes
+# Run tests
 npm run test
 
-# Testes com cobertura
+# Run tests with coverage
 npm run test -- --coverage
 ```
 
 ---
 
-## 🚢 Deploy
+## 🚢 Deployment
 
 ### Frontend (Vercel)
 
 ```bash
 npm run build
-# Push para Vercel (integração automática)
+# Push to Vercel (automatic integration)
 ```
 
 ### Backend (.NET)
@@ -186,10 +188,28 @@ dotnet publish -c Release
 
 ---
 
-## 📚 Recursos Úteis
+## 🔄 Git Workflow
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [React Docs](https://react.dev)
+This repository follows a modern branching strategy:
+
+### Feature Development
+
+1. Create a new branch: `git checkout -b feature/your-feature`
+2. Commit your changes: `git commit -m 'Add some feature'`
+3. Push the branch: `git push origin feature/your-feature`
+4. **Automatic PR to `develop`** will be created by GitHub Actions
+
+### Release Process
+
+1. PR from `develop` to `main` is created automatically after merge
+2. Ensure all tests pass before merging to production
+
+---
+
+## 📚 Useful Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Documentation](https://react.dev)
 - [Tailwind CSS](https://tailwindcss.com)
 - [Radix UI](https://www.radix-ui.com)
 - [dnd-kit Documentation](https://docs.dndkit.com)
@@ -198,21 +218,30 @@ dotnet publish -c Release
 
 ---
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está sob licença privada. Todos os direitos reservados © 2026
-
----
-
-## 👥 Contribuição
-
-Para contribuir ao projeto:
-
-1. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-2. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-3. Push para a branch (`git push origin feature/AmazingFeature`)
-4. Abra um Pull Request
+This project is under a private license. All rights reserved © 2026
 
 ---
 
-**Desenvolvido com ❤️ por LTI Sistemas**
+## 👥 Contributing
+
+To contribute to this project:
+
+1. Create a branch for your feature (`git checkout -b feature/AmazingFeature`)
+2. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+3. Push to the branch (`git push origin feature/AmazingFeature`)
+4. Open a Pull Request
+
+---
+
+## 📞 Support
+
+For questions and support:
+
+- 📧 Email: support@reloflow.com
+- 🐛 Issues: [GitHub Issues](https://github.com/ltisistemas/reloflow-nextjs/issues)
+
+---
+
+**Built with ❤️ by LTI Sistemas**
