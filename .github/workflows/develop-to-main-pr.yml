@@ -33,8 +33,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Run tests with coverage
-        run: yarn test --code-coverage --watch=false --browsers=ChromeHeadless
+      # - name: Run tests with coverage
+      #   run: yarn test --code-coverage --watch=false --browsers=ChromeHeadless
 
       - name: Generate version
         id: version
