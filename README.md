@@ -9,6 +9,10 @@
 ![.NET](https://img.shields.io/badge/.NET%208-512BD4?style=for-the-badge&logo=.net)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
 
+[![Feature to Develop](https://github.com/ltisistemas/reloflow-nextjs/actions/workflows/feature-to-develop-pr.yml/badge.svg)](https://github.com/ltisistemas/reloflow-nextjs/actions/workflows/feature-to-develop-pr.yml)
+
+[![Develop to Main](https://github.com/ltisistemas/reloflow-nextjs/actions/workflows/develop-to-main-pr.yml/badge.svg)](https://github.com/ltisistemas/reloflow-nextjs/actions/workflows/develop-to-main-pr.yml)
+
 ## 📋 About the Project
 
 Reloflow is a modern web application for kanban board management with secure authentication. The system consists of an innovative frontend built with Next.js and a robust backend built with C# .NET 8.
