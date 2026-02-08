@@ -45,6 +45,7 @@ type ID = string | number;
 
 export default function Kanban() {
   const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
 
   const [positions, setPositions] = useState<Position[]>([]);
@@ -261,7 +262,7 @@ export default function Kanban() {
                       className={classOfElements.item}
                       asChild
                       key={item.id}
-                      draggable="true"
+                      draggable={!updating}
                       onDragStart={(e) => ondragstart(e, item)}
                     >
                       <ItemContent>
