@@ -1,13 +1,9 @@
+import { GlobalResponse } from "@/lib/domain/models/global-response.model";
+
 export interface AuthDtoResponse {
-    data: {
-        token: string;
-        sub: string;
-        email: string;
-        name: string;
-    } | null;
-    message: string;
-    success: boolean;
-    statusCode: number;
-    trace: string | null;
-    error: string | null;
+  sub: string;
+  email: string;
+  name: string;
+  lastLogin: string;
+  access_token: string;
 }

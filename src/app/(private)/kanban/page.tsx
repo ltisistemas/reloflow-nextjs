@@ -11,18 +11,12 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { alert } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Company } from "@/lib/domain/models/company/company.model";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import {
   Popover,
   PopoverContent,
@@ -38,10 +32,6 @@ import { CreateLeadRequest } from "@/lib/domain/models/lead/create-lead-request"
 import { Lead } from "@/lib/domain/models/lead/lead.model";
 import { Item, ItemContent, ItemTitle } from "@/components/ui/item";
 import { Position } from "@/lib/domain/models/company/position.model";
-import Droppable from "@/components/hooks/droppable";
-import { SortableItem } from "@/components/hooks/sortable-item";
-
-type ID = string | number;
 
 export default function Kanban() {
   const [loading, setLoading] = useState(false);
@@ -113,7 +103,7 @@ export default function Kanban() {
       } as CreateLeadRequest;
 
       criarLead(payload)
-        .then((response) => {
+        .then(() => {
           alert("Lead criado com sucesso.");
           setNameLead("");
           setLoading(false);
