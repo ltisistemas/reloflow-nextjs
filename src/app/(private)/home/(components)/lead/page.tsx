@@ -53,6 +53,9 @@ export default function LeadPage() {
     LEAD_POSITION_DESCRIPTION: leadPositionsName[0],
     selectedDistrito: "",
     selectedMunicipios: [] as string[],
+    quantidadeMembrosNaFamilia: 1,
+    quantidadeFilhos: 0,
+    idadeDosFilhos: "",
   });
 
   useEffect(() => {
@@ -95,6 +98,9 @@ export default function LeadPage() {
       LEAD_POSITION_DESCRIPTION: "",
       selectedDistrito: "",
       selectedMunicipios: [],
+      quantidadeMembrosNaFamilia: 1,
+      quantidadeFilhos: 0,
+      idadeDosFilhos: "",
     });
   }, []);
 
@@ -287,6 +293,105 @@ export default function LeadPage() {
                             </ComboboxList>
                           </ComboboxContent>
                         </Combobox>
+                      </Field>
+                    </div>
+                    <div className="grid grid-cols-3 gap-6">
+                      <Field>
+                        <Label htmlFor="quantidadeMembrosNaFamilia">
+                          Membros
+                        </Label>
+                        <Combobox
+                          id="quantidadeMembrosNaFamilia"
+                          items={Array.from({ length: 20 }, (_, i) =>
+                            (i + 1).toString(),
+                          )}
+                          value={formData.quantidadeMembrosNaFamilia.toString()}
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              quantidadeMembrosNaFamilia: parseInt(
+                                value || "1",
+                              ),
+                            }))
+                          }
+                        >
+                          <ComboboxInput placeholder="Selecione uma quantidade" />
+                          <ComboboxContent>
+                            <ComboboxList>
+                              {(item) => (
+                                <ComboboxItem key={item} value={item}>
+                                  {item} membro{parseInt(item) > 1 ? "s" : ""}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      </Field>
+
+                      <Field>
+                        <Label htmlFor="quantidadeFilhos">
+                          Quantidade de filhos
+                        </Label>
+                        <Combobox
+                          id="quantidadeFilhos"
+                          items={Array.from({ length: 21 }, (_, i) =>
+                            i.toString(),
+                          )}
+                          value={formData.quantidadeFilhos.toString()}
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              quantidadeFilhos: parseInt(value || "0"),
+                            }))
+                          }
+                        >
+                          <ComboboxInput placeholder="0-20 filhos" />
+                          <ComboboxContent>
+                            <ComboboxList>
+                              {(item) => (
+                                <ComboboxItem key={item} value={item}>
+                                  {item}{" "}
+                                  {parseInt(item) === 1 ? "filho" : "filhos"}
+                                </ComboboxItem>
+                              )}
+                            </ComboboxList>
+                          </ComboboxContent>
+                        </Combobox>
+                      </Field>
+
+                      <Field>
+                        <Label htmlFor="idadeDosFilhos">
+                          Idades dos filhos{" "}
+                          {formData.quantidadeFilhos > 0
+                            ? "(separado por vírgula)"
+                            : ""}
+                        </Label>
+                        <Input
+                          id="name"
+                          value={formData.idadeDosFilhos}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              idadeDosFilhos: e.target.value,
+                            }))
+                          }
+                          placeholder={
+                            formData.quantidadeFilhos > 0
+                              ? "Ex: 5, 8, 12"
+                              : "Selecione filhos primeiro"
+                          }
+                          disabled={formData.quantidadeFilhos === 0} // ✅ Desabilita se 0 filhos
+                          className={
+                            formData.quantidadeFilhos === 0
+                              ? "opacity-50 bg-muted"
+                              : ""
+                          }
+                        />
+                        {formData.quantidadeFilhos === 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Campo ativado após selecionar filhos
+                          </p>
+                        )}
                       </Field>
                     </div>
                   </FieldGroup>
