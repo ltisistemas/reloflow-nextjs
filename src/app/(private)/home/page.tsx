@@ -81,7 +81,7 @@ export default function HomePage() {
 
             {/* ✅ BOTÃO VAI PARA /lead */}
             <Link href="/home/lead">
-              <Button className="bg-teal-400 text-teal-700 hover:bg-teal-200 cursor-pointer font-extrabold inline-flex items-center justify-between gap-2 px-4 py-2 rounded-md border transition-colors">
+              <Button className="bg-teal-400 text-teal-700 hover:bg-teal-200 cursor-pointer font-extrabold inline-flex items-center justify-between gap-2 px-4 py-2 rounded-md border transition-colors h-8">
                 <PlusCircle />
                 <span>Adicionar Lead</span>
               </Button>

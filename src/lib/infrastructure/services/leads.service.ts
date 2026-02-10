@@ -15,6 +15,20 @@ const listarLeads = async (companyId: string) => {
   }
 };
 
+const postLead = async (body: Lead) => {
+  try {
+    return api<Lead>({
+      endpoint: `/auth/lead`,
+      method: "POST",
+      body,
+    });
+  } catch (error) {
+    console.log("> Error on service: ", error);
+
+    return null;
+  }
+};
+
 const listarIbgeDistritosPortugal = () => {
   return distritoMunicipiosPortugal.map((m) => m.distrito);
 };
@@ -34,4 +48,5 @@ export {
   listarIbgePortugal,
   listarIbgeDistritosPortugal,
   listarIbgeMunicipiosPortugal,
+  postLead,
 };
