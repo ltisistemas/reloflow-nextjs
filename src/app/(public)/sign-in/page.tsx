@@ -4,19 +4,18 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardAction,
   CardFooter,
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { login } from "./actions";
 import { alert } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+import { redirect } from "next/navigation";
 
 export default function AuthPage() {
   const [formData, setFormData] = useState({
@@ -28,6 +27,7 @@ export default function AuthPage() {
   useEffect(() => {
     // Clear any existing authentication tokens or user data on mount
     document.cookie = "token=; path=/; max-age=0";
+
     localStorage.removeItem("user");
   }, []);
 
@@ -36,50 +36,51 @@ export default function AuthPage() {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleLogin = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
 
-    if (loading) return;
-    setLoading(true);
+      if (loading) return;
+      setLoading(true);
 
-    // Implement login logic here
-    const { email, password } = formData;
-    console.log("> FormData:", formData);
-    if (!email.length || !password.length) {
-      alert("Please enter both email and password.", "error");
-      return;
-    }
+      // Implement login logic here
+      const { email, password } = formData;
+      console.log("> FormData:", formData);
+      if (!email.length || !password.length) {
+        alert("Please enter both email and password.", "error");
+        return;
+      }
 
-    login({ email, password })
-      .then((response) => {
-        if (response.success) {
-          // Handle successful login
+      login({ email, password })
+        .then((response) => {
+          if (response) {
+            document.cookie = `token=${response.access_token}; path=/; max-age=86400`; // 1 day
 
-          // Set Token on Cookies
-          document.cookie = `token=${response.data?.token}; path=/; max-age=86400`; // 1 day
+            // set User Info on Local Storage
+            const user = {
+              sub: response.sub,
+              email: response.email,
+              name: response.name,
+            };
+            localStorage.setItem("user", JSON.stringify(user));
 
-          // set User Info on Local Storage
-          const user = {
-            sub: response.data?.sub,
-            email: response.data?.email,
-            name: response.data?.name,
-          };
-          localStorage.setItem("user", JSON.stringify(user));
+            alert("Login successful!", "success");
 
-          alert("Login successful!", "success");
+            // Redirect to dashboard or home page
+            window.location.href = "/home";
+            return;
+          }
 
-          // Redirect to dashboard or home page
-          window.location.href = "/home";
-        } else {
-          // Handle login failure
-          alert("Login failed: " + response.message, "error");
-        }
-      })
-      .catch((error) => {
-        alert("An unexpected error occurred.", "error");
-      })
-      .finally(() => setLoading(false));
-  };
+          alert("Erro ao realizar o login.", "error");
+        })
+        .catch((error) => {
+          console.log("> Err", error);
+          alert("An unexpected error occurred.", "error");
+        })
+        .finally(() => setLoading(false));
+    },
+    [formData, loading, login],
+  );
 
   return (
     <div className="flex justify-center min-h-screen items-center bg-muted dark:bg-muted-foreground p-2">

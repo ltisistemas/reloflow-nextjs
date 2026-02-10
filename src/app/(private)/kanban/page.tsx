@@ -11,18 +11,12 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { alert } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Company } from "@/lib/domain/models/company/company.model";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { closestCenter, DndContext, DragOverlay } from "@dnd-kit/core";
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import {
   Popover,
   PopoverContent,
@@ -38,13 +32,10 @@ import { CreateLeadRequest } from "@/lib/domain/models/lead/create-lead-request"
 import { Lead } from "@/lib/domain/models/lead/lead.model";
 import { Item, ItemContent, ItemTitle } from "@/components/ui/item";
 import { Position } from "@/lib/domain/models/company/position.model";
-import Droppable from "@/components/hooks/droppable";
-import { SortableItem } from "@/components/hooks/sortable-item";
-
-type ID = string | number;
 
 export default function Kanban() {
   const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
 
   const [positions, setPositions] = useState<Position[]>([]);
@@ -74,7 +65,7 @@ export default function Kanban() {
   useEffect(() => fetchData(), []);
 
   // Get kanban data from API
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     if (loading) return;
     setLoading(true);
     setCompany(null);
@@ -82,7 +73,6 @@ export default function Kanban() {
 
     consultarEmpresa()
       .then((response) => {
-        console.log("Empresa:", response);
         const company = response.data ? response.data[0] : null;
         setCompany(company);
 
@@ -98,36 +88,35 @@ export default function Kanban() {
         console.error("Erro ao consultar empresa:", error);
         alert("Erro ao consultar empresa.", "error");
       });
-  };
+  }, []);
 
-  const handleLeadCreate = (position: Position) => {
-    if (loading) return;
-    setLoading(true);
+  const handleLeadCreate = useCallback(
+    (position: Position) => {
+      if (loading || !nameLead.trim()) return;
+      setLoading(true);
 
-    const payload = {
-      companyPositionId: position.id,
-      companyId: position.companyId,
-      name: nameLead,
-      description: "",
-    } as CreateLeadRequest;
+      const payload = {
+        companyPositionId: position.id,
+        companyId: position.companyId,
+        name: nameLead.trim(),
+        description: "",
+      } as CreateLeadRequest;
 
-    criarLead(payload)
-      .then((response) => {
-        alert("Lead criado com sucesso.");
-        setLoading(false);
-        setLead(response.data);
-
-        const leads = [...position.leads];
-        leads.push(lead!);
-
-        position.leads = leads;
-      })
-      .catch((error) => {
-        setLoading(false);
-        console.error("> Erro ao criar o Lead:", error);
-        alert("Erro ao criar o Lead.", "error");
-      });
-  };
+      criarLead(payload)
+        .then(() => {
+          alert("Lead criado com sucesso.");
+          setNameLead("");
+          setLoading(false);
+          fetchData();
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.error("> Erro ao criar o Lead:", error);
+          alert("Erro ao criar o Lead.", "error");
+        });
+    },
+    [nameLead, loading, fetchData],
+  );
 
   const classOfElements = {
     main: "no-scrollbar flex-1 flex items-center gap-2 size-full min-h-0 p-2 bg-background overflow-hidden overflow-x-auto",
@@ -238,7 +227,7 @@ export default function Kanban() {
     <main className={classOfElements.main}>
       {!loading && positions.length > 0 && (
         <>
-          {positions
+          {[...positions]
             .sort((a, b) => {
               const indexA = orderByColumns.indexOf(a.name);
               const indexB = orderByColumns.indexOf(b.name);
@@ -252,7 +241,7 @@ export default function Kanban() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent
-                  className="flex-1 min-h-[100px] dropzone border-2 border-dashed border-transparent bg-transparent transition-all duration-200 [&.dropzone-active]:bg-teal-800/80 [&.dropzone-active]:border-teal-900"
+                  className="flex-1 min-h-25 dropzone border-2 border-dashed border-transparent bg-transparent transition-all duration-200 [&.dropzone-active]:bg-teal-800/80 [&.dropzone-active]:border-teal-900"
                   onDragOver={ondragover}
                   onDrop={(e) => ondrop(e, position)}
                   onDragLeave={ondragleave}
@@ -263,7 +252,7 @@ export default function Kanban() {
                       className={classOfElements.item}
                       asChild
                       key={item.id}
-                      draggable="true"
+                      draggable={!updating}
                       onDragStart={(e) => ondragstart(e, item)}
                     >
                       <ItemContent>
@@ -274,9 +263,12 @@ export default function Kanban() {
                 </CardContent>
                 <CardFooter className="mt-auto flex items-center justify-center">
                   {position.name === "Captação de lead" && (
-                    <Popover>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" className="cursor-pointer">
+                        <Button
+                          variant="default"
+                          className="cursor-pointer bg-transparent text-white hover:bg-teal-400 hover:text-teal-900 font-extrabold"
+                        >
                           <PlusCircle className="mr-2" />
                           Adicionar tarefa
                         </Button>
