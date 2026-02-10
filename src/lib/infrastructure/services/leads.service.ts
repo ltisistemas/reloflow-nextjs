@@ -1,6 +1,7 @@
-import { GlobalResponse } from "@/lib/domain/models/global-response.model";
+import { IbgePt } from "@/lib/domain/models/lead/ibge-pt";
 import { Lead } from "@/lib/domain/models/lead/lead.model";
 import { api } from "@/lib/http-client";
+import { distritoMunicipiosPortugal } from "@/lib/infrastructure/data/ibge-pt";
 
 const listarLeads = async (companyId: string) => {
   try {
@@ -14,4 +15,23 @@ const listarLeads = async (companyId: string) => {
   }
 };
 
-export { listarLeads };
+const listarIbgeDistritosPortugal = () => {
+  return distritoMunicipiosPortugal.map((m) => m.distrito);
+};
+
+const listarIbgeMunicipiosPortugal = (distrito: string) => {
+  const uf = distritoMunicipiosPortugal.find((f) => f.distrito === distrito);
+
+  return uf?.municipios;
+};
+
+const listarIbgePortugal = () => {
+  return distritoMunicipiosPortugal as IbgePt[];
+};
+
+export {
+  listarLeads,
+  listarIbgePortugal,
+  listarIbgeDistritosPortugal,
+  listarIbgeMunicipiosPortugal,
+};
